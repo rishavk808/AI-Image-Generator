@@ -1,2 +1,4 @@
-import OpenAI from "openai";
-export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// lib/gemini.js
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
