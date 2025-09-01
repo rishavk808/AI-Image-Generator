@@ -7,7 +7,6 @@ const hf = axios.create({
   },
   timeout: 120000
 });
-
 // Generate image with Stable Diffusion (returns Data URI)
 export async function hfGenerateImage(prompt, model = 'runwayml/stable-diffusion-v1-5') {
   try {
@@ -25,7 +24,6 @@ export async function hfGenerateImage(prompt, model = 'runwayml/stable-diffusion
         }
       }
     );
-
     const base64 = Buffer.from(res.data, 'binary').toString('base64');
     return `data:image/png;base64,${base64}`;
   } catch (err) {

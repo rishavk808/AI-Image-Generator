@@ -2,10 +2,10 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import mongoose from 'mongoose';
 
 import postsRoutes from './routes/posts.js';
 import imagesRoutes from './routes/images.js';
+import { connectDB } from './lib/db.js';
 
 const app = express();
 
@@ -18,13 +18,9 @@ app.get('/api/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
 app.use('/api/posts', postsRoutes);
 app.use('/api/images', imagesRoutes);
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    app.listen(process.env.PORT || 5000, () =>
-      console.log(`✅ API ready at http://localhost:${process.env.PORT || 5000}`)
-    );
-  })
-  .catch(err => {
-    console.error('❌ Mongo connection error:', err);
-    process.exit(1);
-  });
+// ✅ Connect DB first, then start server
+connectDB(process.env.MONGODB_URI).then(() => {
+  app.listen(process.env.PORT || 5000, () =>
+    console.log(`✅ API ready at http://localhost:${process.env.PORT || 5000}`)
+  );
+});
