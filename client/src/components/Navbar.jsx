@@ -4,7 +4,7 @@ export default function Navbar() {
   const { pathname } = useLocation();
   return (
     <nav className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-      <Link to="/" className="font-bold text-xl">GemAI</Link>
+      <Link to="/" className="font-bold text-xl">ImageAI</Link>
       {pathname !== '/create' && (
         <Link
           to="/create"
