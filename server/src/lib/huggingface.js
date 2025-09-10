@@ -1,35 +1,52 @@
-import axios from 'axios';
+// server/src/lib/huggingface.js
+import axios from "axios";
+import FormData from "form-data";
 
-const hf = axios.create({
-  baseURL: 'https://api-inference.huggingface.co/models',
-  headers: {
-    Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`
-  },
-  timeout: 120000
-});
-// Generate image with Stable Diffusion (returns Data URI)
-export async function hfGenerateImage(prompt, model = 'runwayml/stable-diffusion-v1-5') {
+const apiKey = process.env.STABILITY_API_KEY;
+const apiUrl = "https://api.stability.ai/v2beta/stable-image/generate/core";
+
+export async function hfGenerateImage(prompt) {
+  if (!apiKey) throw new Error("Missing STABILITY_API_KEY in environment");
+
   try {
-    const res = await hf.post(
-      `/${model}`,
-      { inputs: prompt },
-      {
-        // HF returns raw image bytes
-        responseType: 'arraybuffer',
-        headers: {
-          'x-wait-for-model': 'true',   // if the model is not loaded yet the model will wait until the image is ready
-          'x-use-cache': 'false'    //If already a image is present it will still force it to generate a new image  
-        },
-        params: {
-        }
-      }
-    );
-    const base64 = Buffer.from(res.data, 'binary').toString('base64');
-    return `data:image/png;base64,${base64}`;
+    const form = new FormData();
+    form.append("prompt", prompt);
+    form.append("width", "512");
+    form.append("height", "512");
+    form.append("samples", "1");
+    form.append("steps", "30");
+    form.append("cfg_scale", "7");
+    form.append("output_format", "png"); // or "webp", etc.
+
+    const headers = {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: "application/json",
+       ...form.getHeaders(),
+    };
+
+    const response = await axios.post(apiUrl, form, {
+      headers,
+      timeout: 300000,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+
+    const data = response.data;
+    if (data?.image) {
+       return `data:image/png;base64,${data.image}`;
+    }
+    if (data?.artifacts && data.artifacts.length > 0) {
+        const b64 = data.artifacts[0].base64 ?? data.artifacts[0].b64 ?? data.artifacts[0].data;
+      if (b64) return `data:image/png;base64,${b64}`;
+    }
+
+    throw new Error("No image data found in Stability response.");
   } catch (err) {
-    const detail =
-      err.response?.data?.error || err.response?.statusText || err.message;
-    console.error('HuggingFace error:', detail);
-    throw new Error('Image generation failed: ' + detail);
+    if (err.response) {
+      console.error("Stability API error:", err.response.status, err.response.statusText, err.response.data || err.response);
+    } else {
+      console.error("Stability request error:", err.message);
+    }
+    throw new Error("Image generation failed. See server logs for details.");
   }
 }

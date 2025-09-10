@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { hfGenerateImage } from '../lib/huggingface.js';
+// import { stabilityGenerateImage } from '../lib/stability.js';
 import cloudinary from '../lib/cloudinary.js';
 
 const GenSchema = z.object({
